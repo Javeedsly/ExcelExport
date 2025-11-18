@@ -1,35 +1,22 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
+﻿// Brauzerdə link: /Report/Download
+using Microsoft.AspNetCore.Mvc;
 
-// [Route] atributunu silib sadə MVC standartına keçək
-// Bu, xəta riskini azaldır.
-public class ReportController : Controller
+public async Task<IActionResult> Download()
 {
-    private readonly ReportService _reportService;
+    var dsk = new ReportDSK();
+    var userId = "test_user";
 
-    public ReportController(ReportService reportService)
+    // DİQQƏT: Metodun adı dəyişdi
+    var reportModel = await _reportService.ExportStudentAdmissionReport(dsk, userId);
+
+    if (reportModel.IsSuccess && reportModel.FileBytes != null)
     {
-        _reportService = reportService;
+        return File(
+            reportModel.FileBytes,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            reportModel.FileName ?? "Hesabat.xlsx"
+        );
     }
 
-    // Brauzerdə link: /Report/Download
-    public async Task<IActionResult> Download()
-    {
-        // ... (əvvəlki kodunuz eynilə qalır) ...
-        var dsk = new ReportDSK();
-        var userId = "test_user";
-
-        var reportModel = await _reportService.ExportGetStudentsAndGraduatesReport(dsk, userId);
-
-        if (reportModel.IsSuccess && reportModel.FileBytes != null)
-        {
-            return File(
-                reportModel.FileBytes,
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                reportModel.FileName ?? "Hesabat.xlsx"
-            );
-        }
-
-        return Content("Xəta baş verdi");
-    }
+    return Content("Xəta baş verdi: Fayl yaradıla bilmədi.");
 }
