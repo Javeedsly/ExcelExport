@@ -20,86 +20,60 @@ public class ReportService
         allCells.Alignment.SetVertical(XLAlignmentVerticalValues.Center);
         allCells.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
 
-        int totalCols = 9;
+        int totalCols = 5;
 
         // ==========================================
         // 2. BAŞLIQ SƏTİRLƏRİ (HEADER)
         // ==========================================
 
         // --- Sətir 1: Əsas Başlıq ---
-        ws.Range(1, 1, 1, totalCols).Merge().Value = "Tədris aparıldığı dilə görə tələbələrin bölgüsü";
+        ws.Range(1, 1, 1, totalCols).Merge().Value = "Təqaüd alan tələbələrin sayı";
         ws.Range(1, 1, 1, totalCols).Style.Font.SetBold().Font.SetFontSize(12);
 
-        // --- Sətir 2, 3, 4: Cədvəl Başlıqları ---
+        // --- Sətir 2, 3: Cədvəl Başlıqları ---
 
-        // Sol tərəfdəki sabit sütunlar (Sətir 2-dən 4-ə qədər şaquli birləşir)
-        ws.Range(2, 1, 4, 1).Merge().Value = "Tabeçilik";
-        ws.Range(2, 2, 4, 2).Merge().Value = "Təhsil müəssisələrinin adı";
-        ws.Range(2, 3, 4, 3).Merge().Value = "Tədris dili";
+        // Sol tərəfdəki sabit sütunlar (Sətir 2-dən 3-ə qədər şaquli birləşir)
+        ws.Range(2, 1, 3, 1).Merge().Value = "Təhsil müəssisələrinin adı";
+        ws.Range(2, 2, 3, 2).Merge().Value = "Göstərici";
+        ws.Range(2, 3, 3, 3).Merge().Value = "Cəmi";
 
-        // "Bakalavr" bloku (Üfüqi birləşmə)
-        ws.Range(2, 4, 2, 9).Merge().Value = "Bakalavr";
+        // "Onlardan" bloku (Üfüqi birləşmə)
+        ws.Range(2, 4, 2, 5).Merge().Value = "onlardan";
 
-        // Alt kateqoriyalar (Sətir 3)
-        ws.Range(3, 4, 3, 5).Merge().Value = "Əyani";
-        ws.Range(3, 6, 3, 7).Merge().Value = "Qiyabi";
-        ws.Range(3, 8, 3, 9).Merge().Value = "Cəmi";
+        // Alt başlıqlar (Sətir 3)
+        ws.Cell(3, 4).Value = "əlaçı təqaüdü alanlar";
+        ws.Cell(3, 5).Value = "prezident təqaüdü alanlar";
 
-        // Sütun başlıqları (Sətir 4)
-        ws.Cell(4, 4).Value = "Cəmi tələbə sayı";
-        ws.Cell(4, 5).Value = "onlardan qadınlar";
-        ws.Cell(4, 6).Value = "Cəmi tələbə sayı";
-        ws.Cell(4, 7).Value = "onlardan qadınlar";
-        ws.Cell(4, 8).Value = "Cəmi tələbə sayı";
-        ws.Cell(4, 9).Value = "onlardan qadınlar";
-
-        // Bütün başlıqları qalın etmək
-        ws.Range(2, 1, 4, totalCols).Style.Font.SetBold();
+        // Başlıqları qalınlaşdırırıq
+        ws.Range(2, 1, 3, totalCols).Style.Font.SetBold();
 
 
         // ==========================================
         // 3. MƏLUMATLARIN DOLDURULMASI
         // ==========================================
 
-        var rowsData = new List<object[]>
-        {
-            new object[] { "DDQ", "ADA Universiteti", "Azərbaycan dili", null, null, null, null, null, null },
-            new object[] { "DDQ", "ADA Universiteti", "Rus dili", null, null, null, null, null, null },
-            new object[] { "DDQ", "ADA Universiteti", "Türk dili", null, null, null, null, null, null },
-            new object[] { "DDQ", "ADA Universiteti", "İngilis dili", 3548, 1816, null, null, 3548, 1816 },
-            new object[] { "DDQ", "ADA Universiteti", "Fransız", null, null, null, null, null, null },
-            new object[] { "DDQ", "ADA Universiteti", "Alman", null, null, null, null, null, null },
-            // Sonuncu sətir
-            new object[] { "DDQ", "ADA Universiteti", "Cəmi", 3548, 1816, null, null, 3548, 1816 }
-        };
+        // --- Sətir 4: Boz rəngli sətir ---
 
-        int currentRow = 5;
-        foreach (var rowData in rowsData)
-        {
-            for (int i = 0; i < rowData.Length; i++)
-            {
-                if (rowData[i] != null)
-                {
-                    // Rəqəm olub-olmadığını yoxlayıb daxil edirik
-                    if (double.TryParse(rowData[i].ToString(), out double num))
-                    {
-                        ws.Cell(currentRow, i + 1).Value = num;
-                    }
-                    else
-                    {
-                        ws.Cell(currentRow, i + 1).Value = rowData[i].ToString();
-                    }
-                }
-            }
+        // 1-ci sütun (ADA Universiteti) - 4 və 5-ci sətirləri birləşdirir
+        ws.Range(4, 1, 5, 1).Merge().Value = "ADA Universiteti";
+        ws.Range(4, 1, 5, 1).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left).Font.SetBold();
 
-            // Əgər sətir "Cəmi" sətridirsə, qalın şriftlə yazaq
-            if (rowData[2] != null && rowData[2].ToString() == "Cəmi")
-            {
-                ws.Range(currentRow, 1, currentRow, totalCols).Style.Font.SetBold();
-            }
+        // Digər sütunlar
+        ws.Cell(4, 2).Value = "Təqaüd alan tələbələrin sayı";
+        ws.Cell(4, 3).Value = 23;
+        ws.Cell(4, 4).Value = ""; // Boş
+        ws.Cell(4, 5).Value = 23;
 
-            currentRow++;
-        }
+        // Sətir 4-ün stili (Boz fon və Qalın şrift)
+        var grayRow = ws.Range(4, 2, 4, 5);
+        grayRow.Style.Fill.BackgroundColor = XLColor.FromArgb(217, 217, 217); // Açıq boz
+        grayRow.Style.Font.SetBold();
+
+        // --- Sətir 5: Ağ rəngli sətir ---
+        ws.Cell(5, 2).Value = "-onlardan qadınlar";
+        ws.Cell(5, 3).Value = 14;
+        ws.Cell(5, 4).Value = ""; // Boş
+        ws.Cell(5, 5).Value = 14;
 
 
         // ==========================================
@@ -107,22 +81,16 @@ public class ReportService
         // ==========================================
 
         // Sütun genişlikləri
-        ws.Column(1).Width = 8;   // Tabeçilik
-        ws.Column(2).Width = 30;  // Uni adı
-        ws.Column(3).Width = 15;  // Dil
-
-        // Rəqəm sütunları (4-9)
-        for (int c = 4; c <= 9; c++) ws.Column(c).Width = 11;
+        ws.Column(1).Width = 25;  // Uni adı
+        ws.Column(2).Width = 35;  // Göstərici
+        ws.Column(3).Width = 10;  // Cəmi
+        ws.Column(4).Width = 20;  // Əlaçı
+        ws.Column(5).Width = 20;  // Prezident
 
         // Sərhədlər (Borders)
-        var tableRange = ws.Range(2, 1, currentRow - 1, totalCols);
+        var tableRange = ws.Range(2, 1, 5, totalCols);
         tableRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
         tableRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-
-        // Mətnlərin düzləndirilməsi (Alignment)
-        // Ad və Dil sütunlarını sola düzləndiririk
-        ws.Range(5, 2, currentRow - 1, 2).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left);
-        ws.Range(5, 3, currentRow - 1, 3).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left);
 
         // ==========================================
         // 5. ÇIXIŞ (EXPORT)
@@ -135,7 +103,7 @@ public class ReportService
         ms.Position = 0;
         var bytes = ms.ToArray();
 
-        return ReportFileViewModel.FileSuccess(bytes, "Tedris_Dili_Hesabati.xlsx");
+        return ReportFileViewModel.FileSuccess(bytes, "Teqaud_Hesabati.xlsx");
     }
 }
 
