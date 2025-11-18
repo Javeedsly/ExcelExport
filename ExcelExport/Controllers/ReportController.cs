@@ -1,42 +1,35 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
-// Həmin namespace-də olduğundan əmin olun
-// (Əgər Program.cs-dən kənara çıxarsanız, 'using' əlavə etməlisiniz)
-
-[Route("[controller]")] // Bu, /Report ünvanında işləməsini təmin edir
+// [Route] atributunu silib sadə MVC standartına keçək
+// Bu, xəta riskini azaldır.
 public class ReportController : Controller
 {
     private readonly ReportService _reportService;
 
-    // "Dependency Injection" ilə ReportService-i avtomatik əldə edirik
     public ReportController(ReportService reportService)
     {
         _reportService = reportService;
     }
 
-    [HttpGet("Download")] // Bu Action /Report/Download ünvanında işləyəcək
-    public async Task<IActionResult> DownloadComplexReport()
+    // Brauzerdə link: /Report/Download
+    public async Task<IActionResult> Download()
     {
-        // Lazımi parametrləri hazırlayın
-        var dsk = new ReportDSK(); // Məlumatları bazadan və ya başqa yerdən alın
-        var userId = "test_user"; // İstifadəçini təyin edin
+        // ... (əvvəlki kodunuz eynilə qalır) ...
+        var dsk = new ReportDSK();
+        var userId = "test_user";
 
-        // 1. Servis funksiyanızı çağırın
-        ReportFileViewModel reportModel = await _reportService.ExportGetStudentsAndGraduatesReport(dsk, userId);
+        var reportModel = await _reportService.ExportGetStudentsAndGraduatesReport(dsk, userId);
 
-        // 2. Modelin içindən byte[] və fayl adını alıb "FileResult" qaytarın
         if (reportModel.IsSuccess && reportModel.FileBytes != null)
         {
-            // Bu, brauzerə birbaşa fayl endirmə siqnalı göndərir
             return File(
                 reportModel.FileBytes,
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // Excel üçün MIME type
-                reportModel.FileName ?? "Hesabat.xlsx" // Fayl adı
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                reportModel.FileName ?? "Hesabat.xlsx"
             );
         }
 
-        // Əgər nəsə səhv baş versə
-        return Content("Hesabat yaradılarkən xəta baş verdi.");
+        return Content("Xəta baş verdi");
     }
 }
