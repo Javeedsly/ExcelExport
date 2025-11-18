@@ -1,22 +1,34 @@
-﻿// Brauzerdə link: /Report/Download
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
-public async Task<IActionResult> Download()
+public class ReportController : Controller
 {
-    var dsk = new ReportDSK();
-    var userId = "test_user";
+    private readonly ReportService _reportService;
 
-    // DİQQƏT: Metodun adı dəyişdi
-    var reportModel = await _reportService.ExportStudentAdmissionReport(dsk, userId);
-
-    if (reportModel.IsSuccess && reportModel.FileBytes != null)
+    // Servisi bura daxil edirik (Dependency Injection)
+    public ReportController(ReportService reportService)
     {
-        return File(
-            reportModel.FileBytes,
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            reportModel.FileName ?? "Hesabat.xlsx"
-        );
+        _reportService = reportService;
     }
 
-    return Content("Xəta baş verdi: Fayl yaradıla bilmədi.");
+    // Brauzerdə link: /Report/Download
+    public async Task<IActionResult> Download()
+    {
+        var dsk = new ReportDSK();
+        var userId = "test_user";
+
+        // ReportService-dəki yeni metodu çağırırıq
+        var reportModel = await _reportService.ExportStudentAdmissionReport(dsk, userId);
+
+        if (reportModel.IsSuccess && reportModel.FileBytes != null)
+        {
+            return File(
+                reportModel.FileBytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                reportModel.FileName ?? "Hesabat.xlsx"
+            );
+        }
+
+        return Content("Xəta baş verdi: Fayl yaradıla bilmədi.");
+    }
 }
