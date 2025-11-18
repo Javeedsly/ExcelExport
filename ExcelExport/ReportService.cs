@@ -1,4 +1,5 @@
 ﻿using ClosedXML.Excel;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -19,16 +20,17 @@ public class ReportService
         allCells.Alignment.SetVertical(XLAlignmentVerticalValues.Center);
         allCells.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
 
-        int totalCols = 33; // Şəkilə əsasən 33 sütun
+        // Şəkildəki sütunların sayı: Tabeçilik(1) ... Qəbul planı(6) ... Kurslar(24) ... Yekun(28)
+        int totalCols = 28;
 
         // ==========================================
         // 2. BAŞLIQ SƏTİRLƏRİ (HEADER) - Şəkilə uyğun
         // ==========================================
 
         // --- Sətir 1: Əsas Başlıq ---
-        ws.Range(1, 1, 1, totalCols).Merge().Value = "1 oktyabr 2024-cü il vəziyyətinə tələbələrin və məzunların ixtisaslar üzrə sayı";
+        ws.Range(1, 1, 1, totalCols).Merge().Value = "Ödənişli əsaslarla təhsil alan tələbələrdən təhsil xərcləri dövlət büdcəsindən ödənilənlərin (imtiyazlılar) sayı";
         ws.Range(1, 1, 1, totalCols).Style.Font.SetBold().Font.SetFontSize(11)
-            .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left);
+            .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
 
         // --- Sətir 2, 3, 4: Cədvəl Başlıqları ---
 
@@ -57,121 +59,153 @@ public class ReportService
         {
             int col = 13 + (i * 2);
             ws.Range(3, col, 3, col + 1).Merge().Value = kurslar[i];
-            // Sol tərəf (Cəmi) başlıqsız qalır və ya boş olur, sağ tərəf "qadınlar"
+            // Sol boş (cəmi), sağ "qadınlar"
+            ws.Cell(4, col).Value = "";
             ws.Cell(4, col + 1).Value = "onlardan qadınlar";
-            ws.Cell(4, col + 1).Style.Alignment.TextRotation = 90; // Yer qənaəti üçün şaquli yazı
+            ws.Cell(4, col + 1).Style.Alignment.TextRotation = 90; // Şaquli yazı
         }
 
-        // Yekun Statistikalar (Sarı sütunlar daxil)
+        // Yekun Statistikalar (Sarı sütunlar)
         ws.Range(2, 25, 4, 25).Merge().Value = "Bütün kurslarda təhsil alanlar, (süt. 8,10,12,14, 16,18 cəmi)";
         ws.Range(2, 26, 4, 26).Merge().Value = "onlardan ödənişli əsaslarla təhsil alanlar (süt. 20)";
         ws.Range(2, 27, 4, 27).Merge().Value = "Cəmi təhsil alanlardan qadınlar (süt. 20)";
         ws.Range(2, 28, 4, 28).Merge().Value = "onlardan ödənişli əsaslarla (süt. 22)";
 
-        // Buraxılış Bloku
-        ws.Range(2, 29, 2, 32).Merge().Value = "01.10.2023-cü ildən 01.10.2024-cü ilədək faktiki buraxılış";
-        ws.Range(3, 29, 4, 29).Merge().Value = "Yekun dövlət attestasiyasına buraxılanlar";
-        ws.Range(3, 30, 4, 30).Merge().Value = "onlardan qadınlar";
-        ws.Range(3, 31, 4, 31).Merge().Value = "Bakalavr diplomu alanlar";
-        ws.Range(3, 32, 4, 32).Merge().Value = "onlardan qadınlar";
 
-        // Gözlənilən Buraxılış
-        ws.Range(2, 33, 4, 33).Merge().Value = "01.10.2024-cü ildən 01.10.2025-ci ilədək gözlənilən buraxılış";
+        // --- Sətir 5: Sütun Nömrələnməsi (A, B, 1, 2...) ---
+        ws.Cell(5, 4).Value = "A";
+        ws.Cell(5, 5).Value = "B";
+        for (int i = 1; i <= 23; i++)
+        {
+            ws.Cell(5, 5 + i).Value = i.ToString(); // Sütun 6-dan başlayaraq 1 yazır
+        }
+        ws.Range(5, 1, 5, totalCols).Style.Font.SetBold();
+        ws.Range(5, 1, 5, totalCols).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
 
 
         // ==========================================
-        // 3. MƏLUMATLARIN DOLDURULMASI (Şəkildəki eyni data)
+        // 3. MƏLUMATLARIN DOLDURULMASI (Şəkildəki dəqiq sətirlər)
         // ==========================================
 
         var rowsData = new List<object[]>
         {
-            // R1: Beynəlxalq münasibətlər
-            new object[] { "DDQ", "ADA Universiteti", "Əyani", "Beynəlxalq münasibətlər", "050201",
-                           80, 79, 79, 48, 48, null, null,
-                           77, 46, 94, 56, 67, 39, 66, 39, 32, 9, 7, 2, // Kurslar I-VI
-                           343, 343, 191, 191, // Cəmi
-                           56, 39, 56, 39, 81 }, // Buraxılış
+            // Sətir 01: İxtisaslar üzrə yekun
+            new object[] { "DDQ", "ADA Universiteti", "Əyani", "İxtisaslar üzrə yekun", "01",
+                           980, 963, 963, 491, 491, null, null,
+                           955, 485, 982, 498, 661, 362, 532, 304, 202, 81, 57, 16,
+                           3389, 3389, 1746, 1746 },
 
-            // R2: Dövlət və ictimai münasibətlər
-            new object[] { "DDQ", "ADA Universiteti", "Əyani", "Dövlət və ictimai münasibətlər", "050203",
-                           80, 80, 80, 55, 55, null, null,
-                           80, 55, 101, 75, 94, 72, 70, 51, 17, 13, 2, 1,
-                           364, 364, 267, 267,
-                           86, 62, 86, 62, 62 },
+            // Sətir 02: Yekun saydan ödənişli
+            new object[] { "DDQ", "ADA Universiteti", "Əyani", "Yekun saydan (sətir 01-dən):\nödənişli əsaslarla təhsil alanlar", "02",
+                           980, 963, 963, 491, 491, null, null,
+                           955, 485, 982, 498, 661, 362, 532, 304, 202, 81, 57, 16,
+                           3389, 3389, 1746, 1746 },
 
-            // R3: Hüquqşünaslıq
-            new object[] { "DDQ", "ADA Universiteti", "Əyani", "Hüquqşünaslıq", "050206",
-                           100, 100, 100, 60, 60, null, null,
-                           99, 59, 148, 95, 84, 50, 97, 68, 18, 9, 5, 1,
-                           451, 451, 282, 282,
-                           74, 49, 74, 49, 88 },
+            // Sətir 03: Dövlət büdcəsindən ödənilənlər
+            new object[] { "DDQ", "ADA Universiteti", "Əyani", "onlardan (sətir 02-dən)\ntəhsil xərcləri dövlət büdcəsindən\nödənilənlərin sayı", "03",
+                           null, 141, 141, 141, 64, 64, 0, 0,
+                           141, 116, 283, 135, 142, 72, 140, 79, 28, 12, 3, 1,
+                           737, null, 415, null },
 
-            // R4: Kommunikasiya və rəqəmsal media
-            new object[] { "DDQ", "ADA Universiteti", "Əyani", "Kommunikasiya və rəqəmsal media", "050216",
-                           40, 40, 40, 28, 28, null, null,
-                           40, 30, 54, 41, 43, 34, 15, 12, null, null, null, null,
-                           152, 152, 117, 117,
-                           null, null, null, null, 10 }
+            // Sətir 04: Valideyn himayəsindən məhrum
+            new object[] { "DDQ", "ADA Universiteti", "Əyani", "valideynlərini itirmiş və ya\nvalideyn himayəsindən məhrum\nolmuş uşaqlar", "04",
+                           5, 5, 5, 3, 3, 0, 0,
+                           5, 5, 7, 4, 2, 2, 5, 3, 2, 1, 0, 0,
+                           21, 21, 15, 13 },
+
+            // Sətir 05: Şəhid ailəsinin üzvü
+            new object[] { "DDQ", "ADA Universiteti", "Əyani", "şəhid ailəsinin üzvü statusu olan\nşəxslər (həyat yoldaşı və s.)", "05",
+                           0, 0, 0, 0, 0, 0, 0,
+                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           null, null, null, null },
+
+            // Sətir 06: Şəhid övladları
+            new object[] { "DDQ", "ADA Universiteti", "Əyani", "şəhid övladları", "06",
+                           2, 2, 2, 0, 0, 0, 0,
+                           2, 1, 4, 2, 2, 1, 0, 0, 0, 0, 0, 0,
+                           8, 8, 4, 3 },
+
+            // Sətir 07: Müharibə əlillərinin övladları
+            new object[] { "DDQ", "ADA Universiteti", "Əyani", "müharibə əlillərinin övladları", "07",
+                           17, 17, 17, 11, 11, 0, 0,
+                           17, 14, 15, 6, 10, 5, 12, 7, 5, 3, 0, 0,
+                           59, 58, 35, 32 },
+
+            // Sətir 08: Müharibə veteranları
+            new object[] { "DDQ", "ADA Universiteti", "Əyani", "müharibə veteranları", "08",
+                           0, 0, 0, 0, 0, 0, 0,
+                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           null, null, null, null },
+
+            // Sətir 09: Əlilliyi müəyyən edilmiş şəxslər
+            new object[] { "DDQ", "ADA Universiteti", "Əyani", "əlilliyi müəyyən edilmiş şəxslər", "09",
+                           5, 5, 5, 3, 3, 0, 0,
+                           5, 3, 3, 0, 1, 1, 0, 0, 0, 0, 0, 0,
+                           9, 9, 4, 4 },
+
+            // Sətir 10: Məcburi köçkünlər
+            new object[] { "DDQ", "ADA Universiteti", "Əyani", "məcburi köçkün statusu olan\nşəxslər", "10",
+                           112, 112, 112, 47, 47, 0, 0,
+                           112, 93, 254, 123, 127, 63, 123, 69, 21, 8, 3, 1,
+                           640, 630, 357, 308 }
         };
 
-        int currentRow = 5;
+        int currentRow = 6;
         foreach (var rowData in rowsData)
         {
             for (int i = 0; i < rowData.Length; i++)
             {
                 if (rowData[i] != null)
                 {
-                    ws.Cell(currentRow, i + 1).Value = rowData[i].ToString(); // ClosedXML bəzən object tipini birbaşa sevmir
-
-                    // Rəqəmdirsə double kimi set edək ki, Excel xəta verməsin
                     if (double.TryParse(rowData[i].ToString(), out double num))
                     {
                         ws.Cell(currentRow, i + 1).Value = num;
                     }
+                    else
+                    {
+                        ws.Cell(currentRow, i + 1).Value = rowData[i].ToString();
+                    }
                 }
             }
-            // Şəkildəki sarı rəngli xanalar (Sütun 25, 26, 27, 28)
-            ws.Cell(currentRow, 25).Style.Fill.BackgroundColor = XLColor.FromArgb(255, 255, 204); // Açıq sarı
-            ws.Cell(currentRow, 26).Style.Fill.BackgroundColor = XLColor.FromArgb(255, 255, 204);
-            ws.Cell(currentRow, 27).Style.Fill.BackgroundColor = XLColor.FromArgb(255, 255, 204);
-            ws.Cell(currentRow, 28).Style.Fill.BackgroundColor = XLColor.FromArgb(255, 255, 204);
+
+            // Sarı rəngli xanalar (Son 4 sütun: 25, 26, 27, 28)
+            ws.Range(currentRow, 25, currentRow, 28).Style.Fill.BackgroundColor = XLColor.FromArgb(255, 255, 204); // Açıq sarı
 
             currentRow++;
         }
 
 
         // ==========================================
-        // 4. FORMATLAŞDIRMA VƏ SƏRHƏDLƏR
+        // 4. FORMATLAŞDIRMA
         // ==========================================
 
-        // Sütun genişlikləri (Şəkilə uyğun tənzimləmə)
+        // Sütun genişlikləri
         ws.Column(1).Width = 5;   // Tabeçilik
         ws.Column(2).Width = 25;  // Uni adı
         ws.Column(3).Width = 8;   // Forma
         ws.Column(4).Width = 35;  // İxtisas adı
-        ws.Column(5).Width = 10;  // Kod
-        ws.Column(6).Width = 6;   // Plan
+        ws.Column(5).Width = 8;   // Kod
 
-        // Rəqəm sütunlarını daraldırıq
-        for (int c = 7; c <= 33; c++) ws.Column(c).Width = 5;
+        // Rəqəm sütunlarını daraldırıq (Sütun 6-dan sona qədər)
+        for (int c = 6; c <= totalCols; c++) ws.Column(c).Width = 5;
 
-        // Başlıqları olan geniş sütunlar
+        // Sarı sütunlar biraz geniş olsun başlıqlara görə
         ws.Column(25).Width = 8;
         ws.Column(26).Width = 8;
         ws.Column(27).Width = 8;
         ws.Column(28).Width = 8;
 
-        // Sərhədlər (Bütün cədvəl üçün)
+        // Sərhədlər (Border)
         var tableRange = ws.Range(2, 1, currentRow - 1, totalCols);
         tableRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
         tableRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
 
-        // Başlıqların arxa plan rəngi (Açıq boz - şəkilə oxşar)
-        ws.Range(2, 1, 4, totalCols).Style.Fill.BackgroundColor = XLColor.FromArgb(242, 242, 242);
+        // Başlıqların arxa plan rəngi (Boz)
+        ws.Range(2, 1, 5, totalCols).Style.Fill.BackgroundColor = XLColor.FromArgb(242, 242, 242);
 
-        // Ad və İxtisas sütunlarını sola, digərlərini ortaya düzləndir
-        ws.Range(5, 2, currentRow - 1, 2).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left);
-        ws.Range(5, 4, currentRow - 1, 4).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left);
+        // Ad və İxtisas sütunlarını sola düzləndir, digərləri mərkəz
+        ws.Range(6, 2, currentRow - 1, 2).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left);
+        ws.Range(6, 4, currentRow - 1, 4).Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Left);
 
 
         // ==========================================
@@ -185,7 +219,7 @@ public class ReportService
         ms.Position = 0;
         var bytes = ms.ToArray();
 
-        return ReportFileViewModel.FileSuccess(bytes, "Tələbə və Məzun Hesabatı.xlsx");
+        return ReportFileViewModel.FileSuccess(bytes, "Imtiyazlilar_Hesabati.xlsx");
     }
 }
 
